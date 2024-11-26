@@ -10,13 +10,11 @@ pipeline {
         
         stage('Test') {
             steps {
-                script {
-                    docker.image('python:3.9').inside {
-                        sh 'pip install pytest'
-                        sh 'pip install -r requirements.txt'
-                        sh 'python -m pytest tests/'
-                    }
-                }
+                sh '''
+                    python3 -m pip install --user pytest
+                    python3 -m pip install --user -r requirements.txt
+                    python3 -m pytest tests/
+                '''
             }
         }
     }
