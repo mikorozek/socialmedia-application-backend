@@ -9,15 +9,16 @@ pipeline {
         }
         
         stage('Test') {
+            agent {
+                docker {
+                    image 'python:3.9'
+                }
+            }
             steps {
-                script {
-                    docker.image('python:3.9').inside {
-                        sh '''
-                            sudo pip install pytest
-                            sudo pip install -r requirements.txt
-                            sudo python -m pytest tests/
-                        '''
-                    }
+                withEnv(["HOME=${env.WORKSPACE}"]) {
+                    sh 'pip install pytest'
+                    sh 'pip install -r  requirements.txt'
+                    sh 'python -m pytest tests/'
                 }
             }
         }
