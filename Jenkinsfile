@@ -13,9 +13,9 @@ pipeline {
                 script {
                     docker.image('python:3.9').inside {
                         sh '''
-                            pip install pytest
-                            pip install -r requirements.txt
-                            python -m pytest tests/
+                            sudo pip install pytest
+                            sudo pip install -r requirements.txt
+                            sudo python -m pytest tests/
                         '''
                     }
                 }
