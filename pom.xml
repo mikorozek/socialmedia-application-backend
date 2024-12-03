@@ -5,56 +5,38 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.example</groupId>
-    <artifactId>springboot-app</artifactId>
+    <artifactId>spring-boot-demo</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>springboot-app</name>
+    <name>spring-boot-demo</name>
     <description>Demo project for Spring Boot</description>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.5.0</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>2.7.5</version>
+        <relativePath/>
     </parent>
+
     <dependencies>
+        <!-- Starter Web, aby stworzyć aplikację webową -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <!-- Starter Test, aby dodać testy jednostkowe -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                        <configuration>
-                            <repositoryId>nexus-repo</repositoryId>
-                            <url>http://<IP_MASZYNY>:8081/repository/maven-releases/</url>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
-
-    <distributionManagement>
-        <repository>
-            <id>nexus-repo</id>
-            <url>http://<IP_MASZYNY>:8081/repository/maven-releases/</url>
-        </repository>
-    </distributionManagement>
 </project>
