@@ -5,6 +5,7 @@ pipeline {
         NEXUS_URL = 'http://<IP_MASZYNY>:8081'  // Adres Twojego Nexusa
         NEXUS_REPO = 'maven-releases'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
         NEXUS_CREDENTIALS = 'nexus-admin'  // ID poświadczeń w Jenkinsie
+        MAVEN_HOME = '/usr/share/maven'   // Ścieżka do Mavena w kontenerze Docker (jeśli potrzebne)
     }
 
     stages {
@@ -57,8 +58,8 @@ pipeline {
             }
             steps {
                 script {
-                    // Przesyłanie artefaktu do repozytorium Nexus
-                    sh 'mvn deploy -DskipTests'
+                    // Używamy Mavena do przesyłania artefaktów do Nexusa
+                    sh "mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO}"
                 }
             }
         }
