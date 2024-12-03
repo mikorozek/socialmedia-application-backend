@@ -1,9 +1,9 @@
 pipeline {
     agent any
-    
+
     environment {
         NEXUS_URL = 'http://<IP_MASZYNY>:8081'  // Adres Twojego Nexusa
-        NEXUS_REPO = 'python-repo'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
+        NEXUS_REPO = 'maven-releases'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
         NEXUS_CREDENTIALS = 'nexus-admin'  // ID poświadczeń w Jenkinsie
     }
 
@@ -14,39 +14,35 @@ pipeline {
                 checkout scm
             }
         }
-        
-        // Etap testowania aplikacji w kontenerze Docker z Pythonem
-        stage('Test') {
+
+        // Etap budowania aplikacji Spring Boot przy użyciu Dockera
+        stage('Build') {
             agent {
                 docker {
-                    image 'python:3.9'  // Obraz Docker z Pythonem 3.9
+                    image 'maven:3.8.4-openjdk-11'  // Użycie obrazu Dockera z Maven i OpenJDK 11
+                    args '-v $HOME/.m2:/root/.m2'  // Montowanie katalogu z lokalnymi repozytoriami Maven
                 }
             }
             steps {
-                withEnv(["HOME=${env.WORKSPACE}"]) {
-                    // Instalacja zależności z requirements.txt
-                    sh 'pip install -r requirements.txt'
-                    
-                    // Instalacja pytest (jeśli nie ma w requirements.txt)
-                    sh 'pip install pytest'
-                    
-                    // Uruchomienie testów
-                    sh 'python -m pytest tests/'
+                script {
+                    // Używamy Maven do budowy aplikacji
+                    sh 'mvn clean package'
                 }
             }
         }
 
-        // Etap budowania artefaktów Pythona
-        stage('Build') {
+        // Etap testowania aplikacji (opcjonalny)
+        stage('Test') {
             agent {
                 docker {
-                    image 'python:3.9'  // Obraz Docker z Pythonem 3.9
+                    image 'maven:3.8.4-openjdk-11'  // Obraz z Maven i OpenJDK 11 do uruchamiania testów
+                    args '-v $HOME/.m2:/root/.m2'  // Montowanie katalogu z lokalnymi repozytoriami Maven
                 }
             }
             steps {
-                withEnv(["HOME=${env.WORKSPACE}"]) {
-                    // Budowanie pakietu Python w formacie sdist i bdist_wheel
-                    sh 'python setup.py sdist bdist_wheel'
+                script {
+                    // Uruchamianie testów jednostkowych
+                    sh 'mvn test'
                 }
             }
         }
@@ -55,17 +51,14 @@ pipeline {
         stage('Upload to Nexus') {
             agent {
                 docker {
-                    image 'python:3.9'  // Obraz Docker z Pythonem 3.9
+                    image 'maven:3.8.4-openjdk-11'  // Obraz z Maven do przesyłania artefaktów
+                    args '-v $HOME/.m2:/root/.m2'  // Montowanie katalogu z lokalnymi repozytoriami Maven
                 }
             }
             steps {
                 script {
-                    // Znalezienie plików w folderze dist
-                    def files = findFiles(glob: 'dist/*')
-                    files.each { file ->
-                        // Wysyłanie każdego pliku do repozytorium Nexus
-                        sh "twine upload --repository-url ${NEXUS_URL}/repository/${NEXUS_REPO}/ ${file}"
-                    }
+                    // Przesyłanie artefaktu do repozytorium Nexus
+                    sh 'mvn deploy -DskipTests'
                 }
             }
         }
