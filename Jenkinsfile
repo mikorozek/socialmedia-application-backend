@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         NEXUS_URL = 'http://<IP_MASZYNY>:8081'  // Adres Twojego Nexusa
-        NEXUS_REPO = 'example-maven'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
+        NEXUS_REPO = 'python-repo'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
         NEXUS_CREDENTIALS = 'nexus-admin'  // ID poświadczeń w Jenkinsie
     }
 
@@ -14,25 +14,26 @@ pipeline {
             }
         }
 
+        stage('Install dependencies') {
+            steps {
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                sh 'python setup.py sdist bdist_wheel'
             }
         }
 
         stage('Upload to Nexus') {
             steps {
-                nexusArtifactUploader artifacts: [[artifactId: 'example-app',
-                                                   classifier: '',
-                                                   file: 'target/example-app-1.0.jar',
-                                                   type: 'jar']],
-                                        credentialsId: "${env.NEXUS_CREDENTIALS}",
-                                        groupId: 'com.example',
-                                        nexusUrl: "${env.NEXUS_URL}",
-                                        nexusVersion: 'nexus3',
-                                        protocol: 'http',
-                                        repository: "${env.NEXUS_REPO}",
-                                        version: '1.0'
+                script {
+                    def files = findFiles(glob: 'dist/*')
+                    files.each {
+                        sh "twine upload --repository-url http://<IP_MASZYNY>:8081/repository/python-repo/ ${it}"
+                    }
+                }
             }
         }
     }
