@@ -1,25 +1,38 @@
 pipeline {
     agent any
-    
+
+    environment {
+        NEXUS_URL = 'http://<IP_MASZYNY>:8081'  // Adres Twojego Nexusa
+        NEXUS_REPO = 'example-maven'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
+        NEXUS_CREDENTIALS = 'nexus-admin'  // ID poświadczeń w Jenkinsie
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-        
-        stage('Test') {
-            agent {
-                docker {
-                    image 'python:3.9'
-                }
-            }
+
+        stage('Build') {
             steps {
-                withEnv(["HOME=${env.WORKSPACE}"]) {
-                    sh 'pip install pytest'
-                    sh 'pip install -r  requirements.txt'
-                    sh 'python -m pytest tests/'
-                }
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Upload to Nexus') {
+            steps {
+                nexusArtifactUploader artifacts: [[artifactId: 'example-app',
+                                                   classifier: '',
+                                                   file: 'target/example-app-1.0.jar',
+                                                   type: 'jar']],
+                                        credentialsId: "${env.NEXUS_CREDENTIALS}",
+                                        groupId: 'com.example',
+                                        nexusUrl: "${env.NEXUS_URL}",
+                                        nexusVersion: 'nexus3',
+                                        protocol: 'http',
+                                        repository: "${env.NEXUS_REPO}",
+                                        version: '1.0'
             }
         }
     }
