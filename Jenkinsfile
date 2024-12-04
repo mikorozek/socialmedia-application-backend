@@ -60,20 +60,20 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'nexus-admin2', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
                     script {
                         // Tworzymy dynamicznie plik settings.xml
-                        sh """
-                        mkdir -p ~/.m2
-                        cat > ~/.m2/settings.xml <<EOF
-                        <settings>
-                          <servers>
-                            <server>
-                              <id>nexus</id>
-                              <username>${NEXUS_USERNAME}</username>
-                              <password>${NEXUS_PASSWORD}</password>
-                            </server>
-                          </servers>
-                        </settings>
-                        EOF
-                        """
+                        // sh """
+                        // mkdir -p ~/.m2
+                        // cat > ~/.m2/settings.xml <<EOF
+                        // <settings>
+                        //   <servers>
+                        //     <server>
+                        //       <id>nexus</id>
+                        //       <username>${NEXUS_USERNAME}</username>
+                        //       <password>${NEXUS_PASSWORD}</password>
+                        //     </server>
+                        //   </servers>
+                        // </settings>
+                        // EOF
+                        // """
                         // Uruchamiamy Maven deploy
                         sh """
                         mvn deploy -DskipTests \
