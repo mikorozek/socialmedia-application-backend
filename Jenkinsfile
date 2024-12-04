@@ -68,6 +68,11 @@ pipeline {
                     }
                 }
             }
+            post {
+                always {
+                    sh 'rm -f settings.xml'
+                }
+            }
         }
     }
 }
