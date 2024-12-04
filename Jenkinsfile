@@ -61,9 +61,10 @@ pipeline {
             // Wprowadzenie poświadczeń 'na pałę' bez użycia withCredentials
             sh """
                 mvn deploy -DskipTests \
-                -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO} \
-                -Dusername=admin \
-                -Dpassword=sofijka23!
+                -DaltDeploymentRepository=nexus::default::http://52.233.173.205:8081/repository/maven-repository \
+                -Drepository.username=admin \
+                -Drepository.password=sofijka23!
+
             """
         }
             }
