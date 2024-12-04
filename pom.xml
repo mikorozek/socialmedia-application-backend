@@ -39,4 +39,10 @@
             </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>nexus</id>
+            <url>http://52.233.173.205:8081/repository/maven-repository/</url>
+        </repository>
+    </distributionManagement>
 </project>
