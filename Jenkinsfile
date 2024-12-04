@@ -62,7 +62,7 @@ pipeline {
             sh """
                 mvn deploy -DskipTests \
                 -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO} \
-                -Dusername=nexus-admin \
+                -Dusername=admin \
                 -Dpassword=sofijka23!
             """
         }
