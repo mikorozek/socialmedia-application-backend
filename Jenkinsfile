@@ -58,15 +58,14 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'nexus-admin', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                        sh """
-                            mvn deploy -DskipTests \
-                            -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO}/ \
-                            -Dusername=${NEXUS_USERNAME} \
-                            -Dpassword=${NEXUS_PASSWORD}
-                        """
-                    }
-                }
+            // Wprowadzenie poświadczeń 'na pałę' bez użycia withCredentials
+            sh """
+                mvn deploy -DskipTests \
+                -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO} \
+                -Dusername=nexus-admin \
+                -Dpassword=sofijka23!
+            """
+        }
             }
         }
     }
