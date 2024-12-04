@@ -58,8 +58,14 @@ pipeline {
             }
             steps {
                 script {
-                    // Używamy Mavena do przesyłania artefaktów do Nexusa
-                    sh "mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO}"
+                    withCredentials([usernamePassword(credentialsId: 'nexus-admin', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                        sh """
+                            mvn deploy -DskipTests \
+                            -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO} \
+                            -Dusername=${NEXUS_USERNAME} \
+                            -Dpassword=${NEXUS_PASSWORD}
+                        """
+                    }
                 }
             }
         }
