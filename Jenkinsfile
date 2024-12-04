@@ -58,18 +58,28 @@ pipeline {
             }
             steps {
                 script {
-                    // Używamy Mavena do przesyłania artefaktów do Nexusa
-                    sh "mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO}"
                     withCredentials([usernamePassword(credentialsId: 'nexus-admin', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
                         sh """
-                            mvn deploy -DskipTests \
-                            -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO} \
-                            -Dusername=${NEXUS_USERNAME} \
-                            -Dpassword=${NEXUS_PASSWORD}
+                            if [ ! -f ~/.m2/settings.xml ]; then
+                                mkdir -p ~/.m2
+                                echo '<settings></settings>' > ~/.m2/settings.xml
+                            fi
+                            sed -i '/<servers>/,/<\\/servers>/d' ~/.m2/settings.xml
+                            sed -i '/<\\/settings>/i\\
+                            <servers>\\
+                                <server>\\
+                                    <id>nexus</id>\\
+                                    <username>${NEXUS_USERNAME}</username>\\
+                                    <password>${NEXUS_PASSWORD}</password>\\
+                                </server>\\
+                            </servers>' ~/.m2/settings.xml
                         """
                     }
+
+                    sh "mvn deploy -DskipTests"
                 }
-            }
+}
+
         }
     }
 }
