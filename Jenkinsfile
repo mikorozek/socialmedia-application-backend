@@ -4,7 +4,7 @@ pipeline {
     environment {
         NEXUS_URL = 'http://52.233.173.205:8081'  // Adres Twojego Nexusa
         NEXUS_REPO = 'maven-repository'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
-        NEXUS_CREDENTIALS = 'nexus-admin2'  // ID poświadczeń w Jenkinsie
+        NEXUS_CREDENTIALS = 'nexus-admin22'  // ID poświadczeń w Jenkinsie
         MAVEN_HOME = '/usr/share/maven'   // Ścieżka do Mavena w kontenerze Docker (jeśli potrzebne)
     }
 
@@ -52,32 +52,20 @@ pipeline {
         stage('Upload to Nexus') {
             agent {
                 docker {
-                    image 'maven:3.8.4-openjdk-11'
-                    args '-v $HOME/.m2:/root/.m2'
+                    image 'maven:3.8.4-openjdk-11'  // Obraz z Maven do przesyłania artefaktów
+                    args '-v $HOME/.m2:/root/.m2'  // Montowanie katalogu z lokalnymi repozytoriami Maven
                 }
             }
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-admin2', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                    script {
-                        // Tworzymy dynamicznie plik settings.xml
-                        // sh """
-                        // mkdir -p ~/.m2
-                        // cat > ~/.m2/settings.xml <<EOF
-                        // <settings>
-                        //   <servers>
-                        //     <server>
-                        //       <id>nexus</id>
-                        //       <username>${NEXUS_USERNAME}</username>
-                        //       <password>${NEXUS_PASSWORD}</password>
-                        //     </server>
-                        //   </servers>
-                        // </settings>
-                        // EOF
-                        // """
-                        // Uruchamiamy Maven deploy
+                script {
+                    // Używamy Mavena do przesyłania artefaktów do Nexusa
+                    sh "mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO}"
+                    withCredentials([usernamePassword(credentialsId: 'nexus-admin', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
                         sh """
-                        mvn deploy -DskipTests \
-                            -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO}
+                            mvn deploy -DskipTests \
+                            -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO} \
+                            -Dusername=${NEXUS_USERNAME} \
+                            -Dpassword=${NEXUS_PASSWORD}
                         """
                     }
                 }
