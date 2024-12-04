@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        NEXUS_URL = 'http://52.233.173.205:8081'  // Adres Twojego Nexusa
-        NEXUS_REPO = 'maven-repository'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
-        NEXUS_CREDENTIALS = 'nexus-admin2'  // ID poświadczeń w Jenkinsie
-        MAVEN_HOME = '/usr/share/maven'   // Ścieżka do Mavena w kontenerze Docker (jeśli potrzebne)
+        NEXUS_URL = 'http://52.233.173.205:8081'
+        NEXUS_REPO = 'maven-repository'
+        NEXUS_CREDENTIALS = 'nexus-admin2'
+        MAVEN_HOME = '/usr/share/maven'
     }
 
     stages {
@@ -52,15 +52,19 @@ pipeline {
             }
             steps {
                 script {
-                    // Używamy Mavena do przesyłania artefaktów do Nexusa
-                    sh "mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO}"
                     withCredentials([usernamePassword(credentialsId: 'nexus-admin', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                        sh """
-                            mvn deploy -DskipTests \
-                            -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO} \
-                            -Dusername=${NEXUS_USERNAME} \
-                            -Dpassword=${NEXUS_PASSWORD}
+                        writeFile file: 'settings.xml', text: """
+                            <settings>
+                                <servers>
+                                    <server>
+                                        <id>nexus</id>
+                                        <username>${NEXUS_USERNAME}</username>
+                                        <password>${NEXUS_PASSWORD}</password>
+                                    </server>
+                                </servers>
+                            </settings>
                         """
+                        sh "mvn clean deploy -s settings.xml -DskipTests -DaltDeploymentRepository=nexus::default::${NEXUS_URL}/repository/${NEXUS_REPO}"
                     }
                 }
             }
