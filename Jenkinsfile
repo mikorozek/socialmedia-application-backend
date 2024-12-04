@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        NEXUS_URL = 'http://<52.233.173.205>:8081'  // Adres Twojego Nexusa
+        NEXUS_URL = 'http://52.233.173.205:8081'  // Adres Twojego Nexusa
         NEXUS_REPO = 'maven-releases'  // Repozytorium w Nexusie, gdzie będziesz wysyłać artefakty
         NEXUS_CREDENTIALS = 'nexus-admin'  // ID poświadczeń w Jenkinsie
         MAVEN_HOME = '/usr/share/maven'   // Ścieżka do Mavena w kontenerze Docker (jeśli potrzebne)
