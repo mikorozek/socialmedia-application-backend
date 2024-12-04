@@ -4,7 +4,6 @@ pipeline {
     environment {
         NEXUS_URL = 'http://52.233.173.205:8081'
         NEXUS_REPO = 'maven-repository'
-        NEXUS_CREDENTIALS = 'nexus-admin2'
         MAVEN_HOME = '/usr/share/maven'
     }
 
