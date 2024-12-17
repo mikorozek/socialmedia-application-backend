@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Build Docker CI Image') {
+            steps {
+                script {
+                    ciImage = docker.build("-f docker/Dockerfile.ci .")
+                }
+            }
+        }
+
+        stage('Build Verification') {
+            steps {
+                script {
+                    sh "docker run ${ciImage.id} go build ./cmd/main.go"
+                }
+            }
+        }
+
+        stage('Code Analysis') {
+            parallel {
+                stage('Linter') {
+                    steps {
+                        sh "docker run ${ciImage.id} golint ./..."
+                    }
+                }
+                stage('Static Analysis') {
+                    steps {
+                        sh "docker run ${ciImage.id} staticcheck ./..."
+                    }
+                }
+                stage('Security Check') {
+                    steps {
+                        sh "docker run ${ciImage.id} gosec ./..."
+                    }
+                }
+            }
+        }
+
+        stage('Tests') {
+            steps {
+                sh "docker run ${ciImage.id} go test ./... -v -cover"
+            }
+        }
+    }
+}
