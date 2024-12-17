@@ -10,7 +10,7 @@ pipeline {
         stage('Build Docker CI Image') {
             steps {
                 script {
-                    ciImage = docker.build("-f docker/Dockerfile.ci .")
+                    ciImage = docker.build("my-ci-image:latest", "-f docker/Dockerfile.ci .")
                 }
             }
         }
