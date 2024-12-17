@@ -1,7 +1,7 @@
 package db
 
 import (
-	"social-media-app/internal/shared/models"
+	"socialmedia-backend/internal/shared/models"
 	"fmt"
 	"log"
 	"os"
