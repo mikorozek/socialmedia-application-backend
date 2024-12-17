@@ -1,43 +1,56 @@
 package main
 
 import (
+	"socialmedia-backend/internal/Auth/handlers"
+	"socialmedia-backend/internal/shared/db"
 	"fmt"
+	"os"
+	"log"
+	"net/http"
 )
 
-// func enableCORS(next http.HandlerFunc) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		w.Header().Set("Access-Control-Allow-Origin", "*")
-// 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-// 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+func enableCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		frontendHost := os.Getenv("FRONTEND_HOST")
+		if frontendHost == "" {
+			frontendHost = "localhost"
+		}
 
-// 		if r.Method == "OPTIONS" {
-// 			w.WriteHeader(http.StatusOK)
-// 			return
-// 		}
-// 		next(w, r)
-// 	}
-// }
+		frontendPort := os.Getenv("FRONTEND_PORT")
+		if frontendPort == "" {
+			frontendPort = "3000"
+		}
+
+		allowedOrigin := fmt.Sprintf("http://%s:%s", frontendHost, frontendPort)
+		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next(w, r)
+	}
+}
 
 func main() {
-	// // Get port from environment variable or use default
-	// port := os.Getenv("PORT")
-	// if port == "" {
-	// 	port = "8080"
-	// }
+	port := os.Getenv("BACKEND_PORT")
+	if port == "" {
+		port = "8080"
+	}
 
-	// // Initialize database connection
-	// if err := db.InitDB(); err != nil {
-	// 	log.Fatal("Failed to initialize database:", err)
-	// }
+	db.InitDB();
 
-	// // Initialize handlers
-	// // Handler := handlers.NewAuthHandler()
 
-	// // http.HandleFunc("/api/auth/login", enableCORS(authHandler.Login))
-	// // http.HandleFunc("/api/auth/register", enableCORS(authHandler.Register))
-	// // http.HandleFunc("/api/auth/verify", enableCORS(authHandler.VerifyToken))
+	authHandler := handlers.NewAuthHandler()
 
-	// // Start server
-	fmt.Printf("Server starting on http://localhost\n")
+	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
+	http.HandleFunc("/api/verify/register", enableCORS(authHandler.Register))
 
+	fmt.Printf("Server starting on http://localhost:%s\n", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatal(err)
+	}
 }
