@@ -11,6 +11,7 @@ import (
 
 type LoginUsecase struct {
 	userRepo *repositories.UserRepository
+	// Jira test
 }
 
 func NewLoginUsecase() *LoginUsecase {
