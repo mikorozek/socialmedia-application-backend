@@ -1,0 +1,14 @@
+FROM golang:1.23.4
+
+WORKDIR /app
+
+RUN go install golang.org/x/lint/golint@latest
+RUN go install honnef.co/go/tools/cmd/staticcheck@latest
+RUN go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+CMD ["go", "test", "./...", "-v", "-cover"]

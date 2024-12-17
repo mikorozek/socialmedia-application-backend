@@ -1,11 +1,10 @@
 package db
 
 import (
-	"band-manager-backend/internal/model"
+	"socialmedia-backend/internal/shared/models"
 	"fmt"
 	"log"
 	"os"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -15,13 +14,7 @@ var db *gorm.DB
 
 func createDB() {
 	err := db.AutoMigrate(
-		&model.Group{},
-		&model.User{},
-		&model.Subgroup{},
-		&model.Announcement{},
-		&model.Event{},
-		&model.Track{},
-		&model.Notesheet{},
+		&models.User{},
 	)
 	if err != nil {
 		log.Fatal("migrations failed: ", err)
@@ -45,16 +38,16 @@ func InitDB() {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		log.Fatal("backend_manager_db connection failed")
+		log.Fatal("socialmedia_db connection failed")
 	}
 
 	db = database
 
-	if !db.Migrator().HasTable(&model.User{}) {
+	if !db.Migrator().HasTable(&models.User{}) {
 		createDB()
 	}
 
-	fmt.Println("backend_manager_db connection successful")
+	fmt.Println("socialmedia_db connection successful")
 }
 
 func GetDB() *gorm.DB {
