@@ -7,13 +7,14 @@ import (
 )
 
 type AuthHandler struct {
-	authUsecase *usecases.AuthUsecase
+	loginUsecase    *usecases.LoginUsecase
+	registerUsecase *usecases.RegisterUsecase
 }
 
 func NewAuthHandler() *AuthHandler {
-	authUsecase := usecases.NewAuthUsecase()
 	return &AuthHandler{
-		authUsecase: authUsecase,
+		loginUsecase:    usecases.NewLoginUsecase(),
+		registerUsecase: usecases.NewRegisterUsecase(),
 	}
 }
 
@@ -40,7 +41,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.authUsecase.Login(request.Email, request.Password)
+	user, err := h.loginUsecase.Login(request.Email, request.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -73,7 +74,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.authUsecase.Register(request.Username, request.Email, request.Password)
+	err := h.registerUsecase.Execute(request.Username, request.Email, request.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
