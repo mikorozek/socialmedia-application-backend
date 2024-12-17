@@ -2,8 +2,8 @@ package usecases
 
 import (
 	"errors"
-	"socialmedia-app/internal/shared/models"
-	"socialmedia-app/internal/shared/repositories"
+	"socialmedia-backend/internal/shared/models"
+	"socialmedia-backend/internal/shared/repositories"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,7 +23,7 @@ func (u *RegisterUsecase) Execute(username, email, password string) error {
 		return errors.New("email already registered")
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return errors.New("failed to hash password")
 	}
@@ -31,7 +31,7 @@ func (u *RegisterUsecase) Execute(username, email, password string) error {
 	newUser := &models.User{
 		Username:       username,
 		Email:          email,
-		HashedPassword: string(hashedPassword),
+		PasswordHash: 	string(passwordHash),
 	}
 
 	if err := u.userRepo.Create(newUser); err != nil {
