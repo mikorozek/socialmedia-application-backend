@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"errors"
-	"socialmedia-app/internal/shared/db"
-	"socialmedia-app/internal/shared/models"
+	"socialmedia-backend/internal/shared/db"
+	"socialmedia-backend/internal/shared/models"
 
 	"gorm.io/gorm"
 )
@@ -18,7 +18,7 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-// GetByEmail znajduje użytkownika po emailu
+// GetByEmail 
 func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	var user models.User
 	result := r.db.Where("email = ?", email).First(&user)
@@ -31,7 +31,6 @@ func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-// Create tworzy nowego użytkownika
 func (r *UserRepository) Create(user *models.User) error {
 	result := r.db.Create(user)
 	if result.Error != nil {
