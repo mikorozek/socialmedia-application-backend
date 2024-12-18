@@ -10,7 +10,7 @@ import (
 )
 
 type LoginUsecase struct {
-	userRepo *repositories.UserRepository
+	userRepo repositories.UserRepositoryInterface
 }
 
 func NewLoginUsecase() *LoginUsecase {
