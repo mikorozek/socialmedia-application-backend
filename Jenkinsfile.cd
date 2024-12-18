@@ -5,6 +5,7 @@ pipeline {
         APP_NAME = 'socialmedia-backend'
         DOCKER_CREDENTIALS = credentials('docker-credentials-id')
         DEPLOY_SERVER = '74.248.138.247'
+	REPO_DIRECTORY = 'socialmedia-application'
     }
     
     stages {
@@ -22,26 +23,42 @@ pipeline {
                 }
             }
         }
-        
-        stage('Push to Registry') {
+        stage('Deploy') {
+            steps {
+                sshagent(credentials: ['jenkins-ssh-key']) {
+                    sh """
+                        ssh azureuser@${DEPLOY_SERVER} "cd ${REPO_DIRECTORY} && \
+                        docker compose pull && \
+                        docker compose down --remove-orphans && \
+                        docker compose up -d"
+                    """
+                }
+            }
+        }
+
+        stage('Health Check') {
             steps {
                 script {
-                    docker.withRegistry("http://${DOCKER_REGISTRY}", 'docker-credentials-id') {
-                        docker.image("${DOCKER_REGISTRY}/${APP_NAME}:${BUILD_NUMBER}").push()
-                        docker.image("${DOCKER_REGISTRY}/${APP_NAME}:latest").push()
+                    sleep 30
+                    
+                    sshagent(credentials: ['jenkins-ssh-key']) {
+                        sh """
+                            ssh azureuser@${DEPLOY_SERVER} '
+                            for i in \$(seq 1 5); do
+                                if curl -s http://localhost:3000/api/health; then
+                                    echo "Application is healthy"
+                                    exit 0
+                                fi
+                                echo "Attempt \$i failed, waiting..."
+                                sleep 10
+                            done
+                            echo "Health check failed after 5 attempts"
+                            exit 1
+                            '
+                        """
                     }
                 }
             }
         }
-		
-	stage('Test SSH Connection') {
-	    steps {
-		sshagent(credentials: ['jenkins-ssh-key']) {
-		    sh """
-			ssh azureuser@${DEPLOY_SERVER} "pwd && ls -la"
-		    """
-		}
-	    }
-	}
     }
 }
