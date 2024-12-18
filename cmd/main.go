@@ -1,12 +1,14 @@
 package main
 
 import (
-	"socialmedia-backend/internal/Auth/handlers"
-	"socialmedia-backend/internal/shared/db"
+	"encoding/json"
 	"fmt"
-	"os"
 	"log"
 	"net/http"
+	"os"
+	"socialmedia-backend/internal/Auth/handlers"
+	"socialmedia-backend/internal/shared/db"
+	"time"
 )
 
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
@@ -35,16 +37,41 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	dbConn := db.GetDB()
+	sqlDB, err := dbConn.DB()
+
+	status := "healthy"
+	dbStatus := "up"
+
+	if err != nil || sqlDB.Ping() != nil {
+		status = "unhealthy"
+		dbStatus = "down"
+	}
+
+	response := map[string]interface{}{
+		"status":    status,
+		"timestamp": time.Now().UTC(),
+		"services": map[string]string{
+			"database": dbStatus,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 func main() {
 	port := os.Getenv("BACKEND_PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	db.InitDB();
-
+	db.InitDB()
 
 	authHandler := handlers.NewAuthHandler()
+
+	http.HandleFunc("/health", enableCORS(healthCheck))
 
 	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
 	http.HandleFunc("/api/verify/register", enableCORS(authHandler.Register))

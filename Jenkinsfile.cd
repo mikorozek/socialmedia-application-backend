@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+    environment {
+        DOCKER_REGISTRY = '74.248.138.247:5000'
+        APP_NAME = 'socialmedia-backend'
+        DOCKER_CREDENTIALS = credentials('docker-credentials-id')
+        DEPLOY_SERVER = '74.248.138.247'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build Production Image') {
+            steps {
+                script {
+                    docker.build("${DOCKER_REGISTRY}/${APP_NAME}:${BUILD_NUMBER}", "-f Dockerfile .")
+                    docker.build("${DOCKER_REGISTRY}/${APP_NAME}:latest", "-f Dockerfile .")
+                }
+            }
+        }
+        
+        stage('Push to Registry') {
+            steps {
+                script {
+                    docker.withRegistry("http://${DOCKER_REGISTRY}", 'docker-credentials-id') {
+                        docker.image("${DOCKER_REGISTRY}/${APP_NAME}:${BUILD_NUMBER}").push()
+                        docker.image("${DOCKER_REGISTRY}/${APP_NAME}:latest").push()
+                    }
+                }
+            }
+        }
+        
+	stage('Test SSH Connection') {
+	    steps {
+		sh """
+		    ssh -vvv ${DEPLOY_SERVER} "pwd && ls -la"
+		"""
+	    }
+	}
+    }
+}
