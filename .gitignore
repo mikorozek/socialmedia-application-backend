@@ -48,3 +48,5 @@ src/main/resources/application-local.yml
 
 ### Other ###
 .env
+
+.terraform/
