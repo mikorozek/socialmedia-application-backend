@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"socialmedia-backend/internal/Auth/usecases"
 	"encoding/json"
 	"net/http"
+	"socialmedia-backend/internal/Auth/usecases"
 )
 
 type AuthHandler struct {
-	loginUsecase    *usecases.LoginUsecase
-	registerUsecase *usecases.RegisterUsecase
+	loginUsecase    usecases.LoginUsecaseInterface
+	registerUsecase usecases.RegisterUsecaseInterface
 }
 
 func NewAuthHandler() *AuthHandler {
@@ -22,9 +22,9 @@ func NewAuthHandler() *AuthHandler {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	type LoginResponse struct {
-		ID        uint   `json:"id"`
-		Username  string `json:"username"`
-		Email     string `json:"email"`
+		ID       uint   `json:"id"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
 	}
 
 	if r.Method != http.MethodPost {
@@ -48,9 +48,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := LoginResponse{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -65,9 +65,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var request struct {
-		Username  string `json:"username"`
-		Email     string `json:"email"`
-		Password  string `json:"password"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

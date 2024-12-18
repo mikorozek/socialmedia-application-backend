@@ -9,6 +9,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type LoginUsecaseInterface interface {
+	Execute(email, password string) (*models.User, error)
+}
+
 type LoginUsecase struct {
 	userRepo repositories.UserRepositoryInterface
 }

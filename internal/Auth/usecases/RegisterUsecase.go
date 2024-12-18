@@ -8,8 +8,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type RegisterUsecaseInterface interface {
+	Execute(username, email, password string) error
+}
+
 type RegisterUsecase struct {
-	userRepo *repositories.UserRepository
+	userRepo repositories.UserRepositoryInterface
 }
 
 func NewRegisterUsecase() *RegisterUsecase {
@@ -29,9 +33,9 @@ func (u *RegisterUsecase) Execute(username, email, password string) error {
 	}
 
 	newUser := &models.User{
-		Username:       username,
-		Email:          email,
-		PasswordHash: 	string(passwordHash),
+		Username:     username,
+		Email:        email,
+		PasswordHash: string(passwordHash),
 	}
 
 	if err := u.userRepo.Create(newUser); err != nil {
