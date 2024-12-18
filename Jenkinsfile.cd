@@ -33,12 +33,14 @@ pipeline {
                 }
             }
         }
-        
+		
 	stage('Test SSH Connection') {
 	    steps {
-		sh """
-		    ssh -vvv ${DEPLOY_SERVER} "pwd && ls -la"
-		"""
+		sshagent(credentials: ['jenkins-ssh-key']) {
+		    sh """
+			ssh azureuser@${DEPLOY_SERVER} "pwd && ls -la"
+		    """
+		}
 	    }
 	}
     }
