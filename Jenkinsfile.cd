@@ -1,8 +1,5 @@
 pipeline {
     agent any
-    triggers {
-	githubRelease()
-    }
     environment {
         DOCKER_REGISTRY = '74.248.138.247:5000'
         APP_NAME = 'socialmedia-backend'
