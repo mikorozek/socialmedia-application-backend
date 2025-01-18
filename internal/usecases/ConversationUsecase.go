@@ -122,11 +122,7 @@ func (u *ConversationUsecase) DeleteMessage(messageID uint, userID uint) error {
 		return errors.New("cannot delete message from another user")
 	}
 
-	if err := u.msgRepo.DeleteUnreadMessages(messageID); err != nil {
-		return err
-	}
-
-	return u.convRepo.DeleteMessage(messageID)
+	return u.msgRepo.DeleteMessage(messageID)
 }
 
 func (u *ConversationUsecase) checkUserAccess(conversationID uint, userID uint) error {
@@ -140,22 +136,13 @@ func (u *ConversationUsecase) checkUserAccess(conversationID uint, userID uint) 
 	return nil
 }
 
-func (u *ConversationUsecase) MarkMessageAsRead(messageID uint, userID uint) error {
-	message, err := u.convRepo.GetMessageByID(messageID)
-	if err != nil {
-		return errors.New("message not found")
+func (u *ConversationUsecase) MarkConversationAsRead(conversationID uint, userID uint) error {
+	if err := u.checkUserAccess(conversationID, userID); err != nil {
+		return err
 	}
-
-	return u.convRepo.DeleteUnreadMessage(messageID, userID, message.ConversationID)
+	return u.unreadRepo.MarkAsRead(conversationID, userID)
 }
 
-func (u *ConversationUsecase) GetUnreadMessages(userID uint) ([]models.Message, error) {
-	return u.convRepo.GetUnreadMessagesForUser(userID)
-}
-
-func (u *ConversationUsecase) GetConversationsWithUnreadCount(userID uint) ([]struct {
-	Conversation *models.Conversation
-	UnreadCount  int
-}, error) {
-	return u.convRepo.GetConversationsWithUnreadCount(userID)
+func (u *ConversationUsecase) GetUnreadConversations(userID uint) ([]models.UnreadConversation, error) {
+	return u.unreadRepo.GetUnreadConversations(userID)
 }
