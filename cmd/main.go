@@ -70,18 +70,24 @@ func main() {
 	db.InitDB()
 
 	authHandler := handlers.NewAuthHandler()
-
 	conversationHandler := handlers.NewConversationHandler()
 
+	// Health check endpoint
 	http.HandleFunc("/api/health", enableCORS(healthCheck))
 
+	// Auth endpoints
 	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
 	http.HandleFunc("/api/verify/register", enableCORS(authHandler.Register))
 
+	// Conversation endpoints
 	http.HandleFunc("/api/conversations/create", enableCORS(conversationHandler.CreateConversation))
-	http.HandleFunc("/api/conversations/send-message", enableCORS(conversationHandler.SendMessage))
-	http.HandleFunc("/api/conversations/messages", enableCORS(conversationHandler.GetMessages))
-	http.HandleFunc("/api/conversations/user", enableCORS(conversationHandler.GetUserConversations))
+	http.HandleFunc("/api/conversations/messages", enableCORS(conversationHandler.SendMessage))     // POST do wysyłania
+	http.HandleFunc("/api/conversations/messages/get", enableCORS(conversationHandler.GetMessages)) // GET do pobierania
+	http.HandleFunc("/api/conversations/messages/edit", enableCORS(conversationHandler.EditMessage))
+	//http.HandleFunc("/api/conversations/messages/delete", enableCORS(conversationHandler.DeleteMessage))
+	http.HandleFunc("/api/conversations/recent", enableCORS(conversationHandler.GetRecentConversations))
+	http.HandleFunc("/api/conversations/unread", enableCORS(conversationHandler.GetUnreadConversations))
+	http.HandleFunc("/api/conversations/mark-read", enableCORS(conversationHandler.MarkAsRead))
 
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
