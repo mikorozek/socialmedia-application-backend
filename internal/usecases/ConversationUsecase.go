@@ -4,6 +4,7 @@ import (
 	"errors"
 	"socialmedia-backend/internal/shared/models"
 	"socialmedia-backend/internal/shared/repositories"
+	"socialmedia-backend/internal/shared/services"
 	"time"
 )
 
@@ -12,14 +13,16 @@ type ConversationUsecase struct {
 	msgRepo    *repositories.MessageRepository
 	unreadRepo *repositories.UnreadConversationRepository
 	userRepo   *repositories.UserRepository
+	wsService  *services.WebSocketService
 }
 
-func NewConversationUsecase() *ConversationUsecase {
+func NewConversationUsecase(wsService *services.WebSocketService) *ConversationUsecase {
 	return &ConversationUsecase{
 		convRepo:   repositories.NewConversationRepository(),
 		msgRepo:    repositories.NewMessageRepository(),
 		unreadRepo: repositories.NewUnreadConversationRepository(),
 		userRepo:   repositories.NewUserRepository(),
+		wsService:  wsService,
 	}
 }
 
@@ -60,13 +63,21 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 		return err
 	}
 
+	sender, err := u.userRepo.GetByID(senderID)
+	if err != nil {
+		return err
+	}
+
 	participants, err := u.convRepo.GetConversationParticipants(conversationID)
 	if err != nil {
 		return err
 	}
 
+	var recipients []uint
 	for _, participantID := range participants {
 		if participantID != senderID {
+			recipients = append(recipients, participantID)
+
 			if err := u.unreadRepo.UpdateUnreadConversation(
 				conversationID,
 				participantID,
@@ -77,6 +88,15 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 			}
 		}
 	}
+
+	notification := services.MessageNotification{
+		ConversationID: conversationID,
+		SenderID:       senderID,
+		SenderUsername: sender.Username,
+		Content:        content,
+	}
+
+	u.wsService.NotifyUsers(notification, recipients)
 
 	return nil
 }
