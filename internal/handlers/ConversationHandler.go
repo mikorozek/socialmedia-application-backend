@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"socialmedia-backend/internal/shared/services"
 	"socialmedia-backend/internal/usecases"
 	"strconv"
 	"time"
@@ -10,11 +11,13 @@ import (
 
 type ConversationHandler struct {
 	conversationUsecase *usecases.ConversationUsecase
+	wsService           *services.WebSocketService
 }
 
-func NewConversationHandler() *ConversationHandler {
+func NewConversationHandler(wsService *services.WebSocketService) *ConversationHandler {
 	return &ConversationHandler{
-		conversationUsecase: usecases.NewConversationUsecase(),
+		conversationUsecase: usecases.NewConversationUsecase(wsService),
+		wsService:           wsService,
 	}
 }
 
