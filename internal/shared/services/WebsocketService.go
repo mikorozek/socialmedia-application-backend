@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -40,7 +41,19 @@ func (s *WebSocketService) RemoveConnection(userID uint) {
 	}
 }
 
+func (s *WebSocketService) getConnectedUsers() []uint {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	var users []uint
+	for userID := range s.connections {
+		users = append(users, userID)
+	}
+	return users
+}
+
 func (s *WebSocketService) NotifyUsers(notification MessageNotification, recipientIDs []uint) {
+	fmt.Printf("Sending notification to users: %v\n", recipientIDs)
+	fmt.Printf("Currently connected users: %v\n", s.getConnectedUsers())
 	message, err := json.Marshal(notification)
 	if err != nil {
 		return
