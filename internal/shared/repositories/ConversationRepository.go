@@ -3,6 +3,7 @@ package repositories
 import (
 	"socialmedia-backend/internal/shared/db"
 	"socialmedia-backend/internal/shared/models"
+	"sort"
 
 	"gorm.io/gorm"
 )
@@ -15,6 +16,12 @@ func NewConversationRepository() *ConversationRepository {
 	return &ConversationRepository{
 		db: db.GetDB(),
 	}
+}
+
+type ConversationWithLastMessage struct {
+	Conversation models.Conversation
+	LastMessage  *models.Message
+	IsUnread     bool
 }
 
 func (r *ConversationRepository) Create(conv *models.Conversation) error {
@@ -98,4 +105,42 @@ func (r *ConversationRepository) GetConversationsWithUnreadCount(userID uint) ([
 	}
 
 	return output, nil
+}
+
+func (r *ConversationRepository) GetRecentConversations(userID uint, limit int) ([]models.Conversation, error) {
+	var conversations []models.Conversation
+	err := r.db.
+		Select("conversations.id"). // Tylko ID konwersacji
+		Preload("Users", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, username, email") // Tylko wybrane pola użytkowników
+		}).
+		Preload("Messages", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, conversation_id, user_id, content, message_date, photo_url").
+				Order("message_date DESC").
+				Limit(1)
+		}).
+		Joins("JOIN conversation_users cu ON cu.conversation_id = conversations.id").
+		Where("cu.user_id = ?", userID).
+		Find(&conversations).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Sortowanie po dacie ostatniej wiadomości
+	sort.Slice(conversations, func(i, j int) bool {
+		if len(conversations[i].Messages) == 0 {
+			return false
+		}
+		if len(conversations[j].Messages) == 0 {
+			return true
+		}
+		return conversations[i].Messages[0].MessageDate.After(conversations[j].Messages[0].MessageDate)
+	})
+
+	if limit > 0 && len(conversations) > limit {
+		conversations = conversations[:limit]
+	}
+
+	return conversations, nil
 }

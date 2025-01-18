@@ -146,3 +146,7 @@ func (u *ConversationUsecase) MarkConversationAsRead(conversationID uint, userID
 func (u *ConversationUsecase) GetUnreadConversations(userID uint) ([]models.UnreadConversation, error) {
 	return u.unreadRepo.GetUnreadConversations(userID)
 }
+
+func (u *ConversationUsecase) GetRecentConversations(userID uint, limit int) ([]models.Conversation, error) {
+	return u.convRepo.GetRecentConversations(userID, limit)
+}
