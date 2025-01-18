@@ -8,6 +8,7 @@ import (
 	"os"
 	"socialmedia-backend/internal/handlers"
 	"socialmedia-backend/internal/shared/db"
+	"socialmedia-backend/internal/shared/services"
 	"time"
 )
 
@@ -70,10 +71,15 @@ func main() {
 	db.InitDB()
 
 	authHandler := handlers.NewAuthHandler()
-	conversationHandler := handlers.NewConversationHandler()
+	wsService := services.NewWebSocketService()
+	wsHandler := handlers.NewWebSocketHandler(wsService)
+	conversationHandler := handlers.NewConversationHandler(wsService)
 
 	// Health check endpoint
 	http.HandleFunc("/api/health", enableCORS(healthCheck))
+	http.HandleFunc("/ws", enableCORS(wsHandler.HandleWebSocket))
+
+	http.HandleFunc("/ws", enableCORS(wsHandler.HandleWebSocket))
 
 	// Auth endpoints
 	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
