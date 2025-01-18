@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"socialmedia-backend/internal/Auth/handlers"
+	"socialmedia-backend/internal/handlers"
 	"socialmedia-backend/internal/shared/db"
 	"time"
 )
@@ -71,10 +71,17 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler()
 
+	conversationHandler := handlers.NewConversationHandler()
+
 	http.HandleFunc("/api/health", enableCORS(healthCheck))
 
 	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
 	http.HandleFunc("/api/verify/register", enableCORS(authHandler.Register))
+
+	http.HandleFunc("/api/conversations/create", enableCORS(conversationHandler.CreateConversation))
+	http.HandleFunc("/api/conversations/send-message", enableCORS(conversationHandler.SendMessage))
+	http.HandleFunc("/api/conversations/messages", enableCORS(conversationHandler.GetMessages))
+	http.HandleFunc("/api/conversations/user", enableCORS(conversationHandler.GetUserConversations))
 
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
