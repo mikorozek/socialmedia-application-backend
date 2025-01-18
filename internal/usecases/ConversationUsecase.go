@@ -8,14 +8,18 @@ import (
 )
 
 type ConversationUsecase struct {
-	convRepo *repositories.ConversationRepository
-	userRepo *repositories.UserRepository
+	convRepo   *repositories.ConversationRepository
+	msgRepo    *repositories.MessageRepository
+	unreadRepo *repositories.UnreadConversationRepository
+	userRepo   *repositories.UserRepository
 }
 
 func NewConversationUsecase() *ConversationUsecase {
 	return &ConversationUsecase{
-		convRepo: repositories.NewConversationRepository(),
-		userRepo: repositories.NewUserRepository(),
+		convRepo:   repositories.NewConversationRepository(),
+		msgRepo:    repositories.NewMessageRepository(),
+		unreadRepo: repositories.NewUnreadConversationRepository(),
+		userRepo:   repositories.NewUserRepository(),
 	}
 }
 
@@ -52,7 +56,7 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 		MessageDate:    time.Now(),
 	}
 
-	if err := u.convRepo.AddMessage(message); err != nil {
+	if err := u.msgRepo.AddMessage(message); err != nil {
 		return err
 	}
 
@@ -64,7 +68,7 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 
 	for _, participantID := range participants {
 		if participantID != senderID {
-			if err := u.convRepo.AddUnreadMessage(message.ID, participantID, conversationID); err != nil {
+			if err := u.msgRepo.AddUnreadMessage(message.ID, participantID, conversationID); err != nil {
 				return err
 			}
 		}
@@ -78,7 +82,7 @@ func (u *ConversationUsecase) GetConversationMessages(conversationID uint, userI
 		return nil, err
 	}
 
-	messages, err := u.convRepo.GetMessages(conversationID, limit, offset)
+	messages, err := u.msgRepo.GetMessages(conversationID, limit, offset)
 	if err != nil {
 		return nil, errors.New("failed to get messages")
 	}
