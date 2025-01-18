@@ -34,7 +34,10 @@ func (s *WebSocketService) RegisterConnection(userID uint, conn *websocket.Conn)
 func (s *WebSocketService) RemoveConnection(userID uint) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	delete(s.connections, userID)
+	if conn, exists := s.connections[userID]; exists {
+		conn.Close()
+		delete(s.connections, userID)
+	}
 }
 
 func (s *WebSocketService) NotifyUsers(notification MessageNotification, recipientIDs []uint) {
@@ -48,6 +51,7 @@ func (s *WebSocketService) NotifyUsers(notification MessageNotification, recipie
 
 	for _, userID := range recipientIDs {
 		if conn, exists := s.connections[userID]; exists {
+
 			conn.WriteMessage(websocket.TextMessage, message)
 		}
 	}
