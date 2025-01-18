@@ -79,8 +79,6 @@ func main() {
 	http.HandleFunc("/api/health", enableCORS(healthCheck))
 	http.HandleFunc("/ws", enableCORS(wsHandler.HandleWebSocket))
 
-	http.HandleFunc("/ws", enableCORS(wsHandler.HandleWebSocket))
-
 	// Auth endpoints
 	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
 	http.HandleFunc("/api/verify/register", enableCORS(authHandler.Register))
