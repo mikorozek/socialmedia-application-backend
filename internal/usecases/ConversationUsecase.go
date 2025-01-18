@@ -60,7 +60,6 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 		return err
 	}
 
-	// Dodaj wiadomość jako nieprzeczytaną dla wszystkich innych uczestników konwersacji
 	participants, err := u.convRepo.GetConversationParticipants(conversationID)
 	if err != nil {
 		return err
@@ -68,7 +67,12 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 
 	for _, participantID := range participants {
 		if participantID != senderID {
-			if err := u.msgRepo.AddUnreadMessage(message.ID, participantID, conversationID); err != nil {
+			if err := u.unreadRepo.UpdateUnreadConversation(
+				conversationID,
+				participantID,
+				content,
+				message.MessageDate,
+			); err != nil {
 				return err
 			}
 		}
@@ -82,6 +86,10 @@ func (u *ConversationUsecase) GetConversationMessages(conversationID uint, userI
 		return nil, err
 	}
 
+	if err := u.unreadRepo.MarkAsRead(conversationID, userID); err != nil {
+		return nil, err
+	}
+
 	messages, err := u.msgRepo.GetMessages(conversationID, limit, offset)
 	if err != nil {
 		return nil, errors.New("failed to get messages")
@@ -90,17 +98,8 @@ func (u *ConversationUsecase) GetConversationMessages(conversationID uint, userI
 	return messages, nil
 }
 
-func (u *ConversationUsecase) GetUserConversations(userID uint) ([]models.Conversation, error) {
-	conversations, err := u.convRepo.GetUserConversations(userID)
-	if err != nil {
-		return nil, errors.New("failed to get user conversations")
-	}
-
-	return conversations, nil
-}
-
 func (u *ConversationUsecase) EditMessage(messageID uint, userID uint, newContent string) error {
-	message, err := u.convRepo.GetMessageByID(messageID)
+	message, err := u.msgRepo.GetMessageByID(messageID)
 	if err != nil {
 		return errors.New("message not found")
 	}
@@ -110,11 +109,11 @@ func (u *ConversationUsecase) EditMessage(messageID uint, userID uint, newConten
 	}
 
 	message.Content = newContent
-	return u.convRepo.UpdateMessage(message)
+	return u.msgRepo.UpdateMessage(message)
 }
 
 func (u *ConversationUsecase) DeleteMessage(messageID uint, userID uint) error {
-	message, err := u.convRepo.GetMessageByID(messageID)
+	message, err := u.msgRepo.GetMessageByID(messageID)
 	if err != nil {
 		return errors.New("message not found")
 	}
@@ -123,7 +122,7 @@ func (u *ConversationUsecase) DeleteMessage(messageID uint, userID uint) error {
 		return errors.New("cannot delete message from another user")
 	}
 
-	if err := u.convRepo.DeleteUnreadMessages(messageID); err != nil {
+	if err := u.msgRepo.DeleteUnreadMessages(messageID); err != nil {
 		return err
 	}
 
