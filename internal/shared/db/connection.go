@@ -18,7 +18,7 @@ func createDB() {
 		&models.User{},
 		&models.Conversation{},
 		&models.Message{},
-		&models.UnreadMessage{},
+		&models.UnreadConversation{},
 	)
 	if err != nil {
 		log.Fatal("migrations failed: ", err)

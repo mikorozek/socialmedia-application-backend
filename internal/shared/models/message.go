@@ -3,12 +3,12 @@ package models
 import "time"
 
 type Message struct {
-	ID             uint         `gorm:"primarykey"`
-	ConversationID uint         `gorm:"not null"`
-	Conversation   Conversation `gorm:"foreignKey:ConversationID"`
-	UserID         uint         `gorm:"not null"`
-	User           User         `gorm:"foreignKey:UserID"`
-	Content        string       `gorm:"not null"`
-	MessageDate    time.Time    `gorm:"not null"`
+	ID             uint         `gorm:"primarykey" json:"id"`
+	ConversationID uint         `gorm:"not null" json:"conversation_id"`
+	Conversation   Conversation `gorm:"foreignKey:ConversationID" json:"conversation"`
+	UserID         uint         `gorm:"not null" json:"user_id"`
+	User           User         `gorm:"foreignKey:UserID" json:"user"`
+	Content        string       `gorm:"not null" json:"content"`
+	MessageDate    time.Time    `gorm:"not null" json:"message_date"`
 	PhotoURL       string
 }
