@@ -71,7 +71,7 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler()
 
-	http.HandleFunc("/api/health", enableCORS(healthCheck))
+	http.HandleFunc("/health", enableCORS(healthCheck))
 
 	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
 	http.HandleFunc("/api/verify/register", enableCORS(authHandler.Register))
