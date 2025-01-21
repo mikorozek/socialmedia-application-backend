@@ -18,7 +18,7 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-// GetByEmail 
+// GetByEmail
 func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	var user models.User
 	result := r.db.Where("email = ?", email).First(&user)
@@ -37,4 +37,31 @@ func (r *UserRepository) Create(user *models.User) error {
 		return errors.New("failed to create user")
 	}
 	return nil
+}
+
+func (r *UserRepository) GetByID(id uint) (*models.User, error) {
+	var user models.User
+	result := r.db.First(&user, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) SearchUsers(query string) ([]models.User, error) {
+	var users []models.User
+
+	result := r.db.Where("username ILIKE ? OR email ILIKE ?",
+		"%"+query+"%",
+		"%"+query+"%").
+		Find(&users)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return users, nil
 }
