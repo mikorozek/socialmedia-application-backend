@@ -61,6 +61,18 @@ resource "azurerm_network_security_group" "nsg" {
   }
 
   security_rule {
+    name                       = "HTTP-frontend"
+    priority                   = 111
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3000"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
     name                       = "HTTPS"
     priority                   = 120
     direction                  = "Inbound"
