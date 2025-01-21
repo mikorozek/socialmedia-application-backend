@@ -1,10 +1,11 @@
 package db
 
 import (
-	"socialmedia-backend/internal/shared/models"
 	"fmt"
 	"log"
 	"os"
+	"socialmedia-backend/internal/shared/models"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -15,6 +16,9 @@ var db *gorm.DB
 func createDB() {
 	err := db.AutoMigrate(
 		&models.User{},
+		&models.Conversation{},
+		&models.Message{},
+		&models.UnreadConversation{},
 	)
 	if err != nil {
 		log.Fatal("migrations failed: ", err)
@@ -43,9 +47,7 @@ func InitDB() {
 
 	db = database
 
-	if !db.Migrator().HasTable(&models.User{}) {
-		createDB()
-	}
+	createDB()
 
 	fmt.Println("socialmedia_db connection successful")
 }

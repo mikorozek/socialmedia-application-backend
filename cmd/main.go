@@ -6,8 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"socialmedia-backend/internal/Auth/handlers"
+	"socialmedia-backend/internal/handlers"
 	"socialmedia-backend/internal/shared/db"
+	"socialmedia-backend/internal/shared/services"
 	"time"
 )
 
@@ -70,11 +71,29 @@ func main() {
 	db.InitDB()
 
 	authHandler := handlers.NewAuthHandler()
+	wsService := services.NewWebSocketService()
+	wsHandler := handlers.NewWebSocketHandler(wsService)
+	conversationHandler := handlers.NewConversationHandler(wsService)
+	userSearchHandler := handlers.NewUserSearchHandler()
 
-	http.HandleFunc("/health", enableCORS(healthCheck))
+	// Health check endpoint
+	http.HandleFunc("/api/health", enableCORS(healthCheck))
+	http.HandleFunc("/ws", enableCORS(wsHandler.HandleWebSocket))
 
+	// Auth endpoints
 	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
 	http.HandleFunc("/api/verify/register", enableCORS(authHandler.Register))
+
+	// Conversation endpoints
+	http.HandleFunc("/api/conversations/create", enableCORS(conversationHandler.CreateConversation))
+	http.HandleFunc("/api/conversations/messages", enableCORS(conversationHandler.SendMessage))     // POST do wysyłania
+	http.HandleFunc("/api/conversations/messages/get", enableCORS(conversationHandler.GetMessages)) // GET do pobierania
+	http.HandleFunc("/api/conversations/messages/edit", enableCORS(conversationHandler.EditMessage))
+	//http.HandleFunc("/api/conversations/messages/delete", enableCORS(conversationHandler.DeleteMessage))
+	http.HandleFunc("/api/conversations/recent", enableCORS(conversationHandler.GetRecentConversations))
+	http.HandleFunc("/api/conversations/unread", enableCORS(conversationHandler.GetUnreadConversations))
+	http.HandleFunc("/api/conversations/mark-read", enableCORS(conversationHandler.MarkAsRead))
+	http.HandleFunc("/api/users/search", enableCORS(userSearchHandler.SearchUsers))
 
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
