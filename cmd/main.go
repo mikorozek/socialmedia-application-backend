@@ -74,6 +74,7 @@ func main() {
 	wsService := services.NewWebSocketService()
 	wsHandler := handlers.NewWebSocketHandler(wsService)
 	conversationHandler := handlers.NewConversationHandler(wsService)
+	userSearchHandler := handlers.NewUserSearchHandler()
 
 	// Health check endpoint
 	http.HandleFunc("/api/health", enableCORS(healthCheck))
@@ -92,6 +93,7 @@ func main() {
 	http.HandleFunc("/api/conversations/recent", enableCORS(conversationHandler.GetRecentConversations))
 	http.HandleFunc("/api/conversations/unread", enableCORS(conversationHandler.GetUnreadConversations))
 	http.HandleFunc("/api/conversations/mark-read", enableCORS(conversationHandler.MarkAsRead))
+	http.HandleFunc("/api/users/search", enableCORS(userSearchHandler.SearchUsers))
 
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
