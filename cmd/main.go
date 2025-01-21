@@ -75,6 +75,7 @@ func main() {
 	wsHandler := handlers.NewWebSocketHandler(wsService)
 	conversationHandler := handlers.NewConversationHandler(wsService)
 	userSearchHandler := handlers.NewUserSearchHandler()
+	userProfileHandler := handlers.NewUserProfileHandler()
 
 	// Health check endpoint
 	http.HandleFunc("/api/health", enableCORS(healthCheck))
@@ -83,6 +84,9 @@ func main() {
 	// Auth endpoints
 	http.HandleFunc("/api/verify/login", enableCORS(authHandler.Login))
 	http.HandleFunc("/api/verify/register", enableCORS(authHandler.Register))
+
+	http.HandleFunc("/api/users/profile", userProfileHandler.GetUserProfile)
+	http.HandleFunc("/api/users/profile/edit", userProfileHandler.EditUserProfile)
 
 	// Conversation endpoints
 	http.HandleFunc("/api/conversations/create", enableCORS(conversationHandler.CreateConversation))

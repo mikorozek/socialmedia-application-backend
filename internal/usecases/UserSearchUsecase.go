@@ -16,7 +16,7 @@ func NewUserSearchUsecase() *UserSearchUsecase {
 }
 
 type UserSearchResult struct {
-	ID       uint   `json:"user_id"`
+	ID       uint   `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }

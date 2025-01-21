@@ -65,3 +65,11 @@ func (r *UserRepository) SearchUsers(query string) ([]models.User, error) {
 
 	return users, nil
 }
+
+func (r *UserRepository) Update(user *models.User) error {
+	result := r.db.Save(user)
+	if result.Error != nil {
+		return errors.New("failed to update user")
+	}
+	return nil
+}
