@@ -244,8 +244,11 @@ func (h *ConversationHandler) GetRecentConversations(w http.ResponseWriter, r *h
 	}
 
 	type MessageResponse struct {
+		ID          uint      `json:"id"`
 		Content     string    `json:"content"`
 		MessageDate time.Time `json:"message_date"`
+		SenderID    uint      `json:"sender_id"`
+		SenderName  string    `json:"sender_name"`
 	}
 
 	type ConversationResponse struct {
@@ -269,8 +272,11 @@ func (h *ConversationHandler) GetRecentConversations(w http.ResponseWriter, r *h
 		var lastMessage MessageResponse
 		if len(conv.Messages) > 0 {
 			lastMessage = MessageResponse{
+				ID:          conv.Messages[0].ID,
 				Content:     conv.Messages[0].Content,
 				MessageDate: conv.Messages[0].MessageDate,
+				SenderID:    conv.Messages[0].UserID,
+				SenderName:  conv.Messages[0].User.Username,
 			}
 		}
 
