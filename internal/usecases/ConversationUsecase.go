@@ -2,9 +2,11 @@ package usecases
 
 import (
 	"errors"
+	"reflect"
 	"socialmedia-backend/internal/shared/models"
 	"socialmedia-backend/internal/shared/repositories"
 	"socialmedia-backend/internal/shared/services"
+	"sort"
 	"time"
 )
 
@@ -27,12 +29,36 @@ func NewConversationUsecase(wsService *services.WebSocketService) *ConversationU
 }
 
 func (u *ConversationUsecase) CreateConversation(userIDs []uint) (*models.Conversation, error) {
+	sort.Slice(userIDs, func(i, j int) bool {
+		return userIDs[i] < userIDs[j]
+	})
+
+	conversations, err := u.convRepo.GetUserConversations(userIDs[0])
+	if err != nil {
+		return nil, err
+	}
+
+	for _, conv := range conversations {
+		if len(conv.Users) == len(userIDs) {
+			existingUserIDs := make([]uint, len(conv.Users))
+			for i, user := range conv.Users {
+				existingUserIDs[i] = user.ID
+			}
+			sort.Slice(existingUserIDs, func(i, j int) bool {
+				return existingUserIDs[i] < existingUserIDs[j]
+			})
+
+			if reflect.DeepEqual(existingUserIDs, userIDs) {
+				return nil, errors.New("conversation between these users already exists")
+			}
+		}
+	}
 	if len(userIDs) < 2 {
 		return nil, errors.New("conversation requires at least 2 users")
 	}
 
 	conv := &models.Conversation{}
-	err := u.convRepo.Create(conv)
+	err = u.convRepo.Create(conv)
 	if err != nil {
 		return nil, errors.New("failed to create conversation")
 	}
@@ -43,12 +69,17 @@ func (u *ConversationUsecase) CreateConversation(userIDs []uint) (*models.Conver
 		}
 	}
 
-	return conv, nil
+	fullConversation, err := u.convRepo.GetByID(conv.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return fullConversation, nil
 }
 
-func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, content string, photoURL string) error {
+func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, content string, photoURL string) (*models.Message, error) {
 	if err := u.checkUserAccess(conversationID, senderID); err != nil {
-		return err
+		return nil, err
 	}
 
 	message := &models.Message{
@@ -60,17 +91,17 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 	}
 
 	if err := u.msgRepo.AddMessage(message); err != nil {
-		return err
+		return nil, err
 	}
 
 	sender, err := u.userRepo.GetByID(senderID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	participants, err := u.convRepo.GetConversationParticipants(conversationID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var recipients []uint
@@ -84,7 +115,7 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 				content,
 				message.MessageDate,
 			); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -98,7 +129,7 @@ func (u *ConversationUsecase) SendMessage(conversationID uint, senderID uint, co
 
 	u.wsService.NotifyUsers(notification, recipients)
 
-	return nil
+	return message, nil
 }
 
 func (u *ConversationUsecase) GetConversationMessages(conversationID uint, userID uint, limit int, offset int) ([]models.Message, error) {
