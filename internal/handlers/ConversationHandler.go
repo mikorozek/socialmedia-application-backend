@@ -23,6 +23,7 @@ func NewConversationHandler(wsService *services.WebSocketService) *ConversationH
 
 // POST /api/conversations/create
 func (h *ConversationHandler) CreateConversation(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -66,7 +67,7 @@ func (h *ConversationHandler) SendMessage(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err := h.conversationUsecase.SendMessage(
+	message, err := h.conversationUsecase.SendMessage(
 		request.ConversationID,
 		request.SenderID,
 		request.Content,
@@ -78,7 +79,8 @@ func (h *ConversationHandler) SendMessage(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(message)
 }
 
 // GET /api/conversations/messages?conversation_id=1&user_id=1&limit=50&offset=0
