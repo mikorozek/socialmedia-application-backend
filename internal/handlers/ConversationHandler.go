@@ -123,8 +123,8 @@ func (h *ConversationHandler) GetMessages(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Mapowanie na uproszczoną strukturę odpowiedzi
-	var response []MessageResponse
+	response := make([]MessageResponse, 0)
+
 	for _, msg := range messages {
 		response = append(response, MessageResponse{
 			ID:             msg.ID,
@@ -253,9 +253,9 @@ func (h *ConversationHandler) GetRecentConversations(w http.ResponseWriter, r *h
 	}
 
 	type ConversationResponse struct {
-		ID          uint            `json:"id"`
-		Users       []UserResponse  `json:"users"`
-		LastMessage MessageResponse `json:"last_message"`
+		ID          uint             `json:"id"`
+		Users       []UserResponse   `json:"users"`
+		LastMessage *MessageResponse `json:"last_message"`
 	}
 
 	// Przekształcamy dane do żądanego formatu
@@ -270,9 +270,9 @@ func (h *ConversationHandler) GetRecentConversations(w http.ResponseWriter, r *h
 			})
 		}
 
-		var lastMessage MessageResponse
-		if len(conv.Messages) > 0 {
-			lastMessage = MessageResponse{
+		var lastMessage *MessageResponse
+		if len(conv.Messages) > 0 && conv.Messages[0].ID != 0 {
+			lastMessage = &MessageResponse{
 				ID:          conv.Messages[0].ID,
 				Content:     conv.Messages[0].Content,
 				MessageDate: conv.Messages[0].MessageDate,
