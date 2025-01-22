@@ -210,8 +210,13 @@ func (h *ConversationHandler) GetUnreadConversations(w http.ResponseWriter, r *h
 		return
 	}
 
+	unreadConversationIDs := make([]uint, 0)
+	for _, conv := range conversations {
+		unreadConversationIDs = append(unreadConversationIDs, conv.ConversationID)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(conversations)
+	json.NewEncoder(w).Encode(unreadConversationIDs)
 }
 
 // GET /api/conversations/recent?user_id=1&limit=50
