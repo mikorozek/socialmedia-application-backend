@@ -115,14 +115,10 @@ func (r *ConversationRepository) GetRecentConversations(userID uint, limit int) 
 			return db.Select("id, username, email")
 		}).
 		Preload("Messages", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, conversation_id, user_id, content, message_date, photo_url").
-				Where("messages.id IN (?)",
-					r.db.Model(&models.Message{}).
-						Select("id").
-						Where("conversation_id = conversations.id").
-						Order("message_date DESC").
-						Limit(1),
-				)
+			return db.Table("messages").
+				Select("messages.*").
+				Joins("JOIN (SELECT conversation_id, MAX(message_date) as max_date FROM messages GROUP BY conversation_id) latest ON messages.conversation_id = latest.conversation_id AND messages.message_date = latest.max_date").
+				Order("messages.message_date DESC")
 		}).
 		Joins("JOIN conversation_users cu ON cu.conversation_id = conversations.id").
 		Where("cu.user_id = ?", userID).
