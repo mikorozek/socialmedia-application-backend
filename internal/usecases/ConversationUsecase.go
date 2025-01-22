@@ -32,12 +32,10 @@ func (u *ConversationUsecase) CreateConversation(userIDs []uint) (*models.Conver
 	sort.Slice(userIDs, func(i, j int) bool {
 		return userIDs[i] < userIDs[j]
 	})
-
 	conversations, err := u.convRepo.GetUserConversations(userIDs[0])
 	if err != nil {
 		return nil, err
 	}
-
 	for _, conv := range conversations {
 		if len(conv.Users) == len(userIDs) {
 			existingUserIDs := make([]uint, len(conv.Users))
@@ -47,7 +45,6 @@ func (u *ConversationUsecase) CreateConversation(userIDs []uint) (*models.Conver
 			sort.Slice(existingUserIDs, func(i, j int) bool {
 				return existingUserIDs[i] < existingUserIDs[j]
 			})
-
 			if reflect.DeepEqual(existingUserIDs, userIDs) {
 				return nil, errors.New("conversation between these users already exists")
 			}
@@ -62,16 +59,21 @@ func (u *ConversationUsecase) CreateConversation(userIDs []uint) (*models.Conver
 	if err != nil {
 		return nil, errors.New("failed to create conversation")
 	}
-
 	for _, userID := range userIDs {
 		if err := u.convRepo.AddUserToConversation(conv.ID, userID); err != nil {
 			return nil, err
 		}
 	}
-
 	fullConversation, err := u.convRepo.GetByID(conv.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	if fullConversation.Messages == nil {
+		fullConversation.Messages = []models.Message{}
+	}
+	if fullConversation.Users == nil {
+		fullConversation.Users = []*models.User{}
 	}
 
 	return fullConversation, nil
