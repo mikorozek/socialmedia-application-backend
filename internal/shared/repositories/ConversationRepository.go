@@ -110,14 +110,19 @@ func (r *ConversationRepository) GetConversationsWithUnreadCount(userID uint) ([
 func (r *ConversationRepository) GetRecentConversations(userID uint, limit int) ([]models.Conversation, error) {
 	var conversations []models.Conversation
 	err := r.db.
-		Select("conversations.id"). // Tylko ID konwersacji
+		Select("conversations.id").
 		Preload("Users", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, username, email") // Tylko wybrane pola użytkowników
+			return db.Select("id, username, email")
 		}).
 		Preload("Messages", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, conversation_id, user_id, content, message_date, photo_url").
-				Order("message_date DESC").
-				Limit(1)
+				Where("messages.id IN (?)",
+					r.db.Model(&models.Message{}).
+						Select("id").
+						Where("conversation_id = conversations.id").
+						Order("message_date DESC").
+						Limit(1),
+				)
 		}).
 		Joins("JOIN conversation_users cu ON cu.conversation_id = conversations.id").
 		Where("cu.user_id = ?", userID).
@@ -127,7 +132,6 @@ func (r *ConversationRepository) GetRecentConversations(userID uint, limit int) 
 		return nil, err
 	}
 
-	// Sortowanie po dacie ostatniej wiadomości
 	sort.Slice(conversations, func(i, j int) bool {
 		if len(conversations[i].Messages) == 0 {
 			return false
